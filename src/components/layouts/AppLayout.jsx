@@ -4,7 +4,6 @@ import Navbar from "./Navbar";
 import Sidebar from "../Sidebar";
 
 const AppLayout = ({ role }) => {
-  // role can be 'admin', 'volunteer', 'citizen' or null for public
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const hasSidebar = role && role !== "guest";
 
@@ -30,14 +29,17 @@ const AppLayout = ({ role }) => {
         )}
 
         <main
-          className={`grow ${hasSidebar ? "bg-gray-50/50 p-4 md:p-8" : ""}`}
+          className={cn(
+            "grow min-w-0 flex-1 overflow-x-hidden", // Added min-w-0 and overflow-x-hidden
+            hasSidebar ? "bg-gray-50/50 p-4 md:p-8" : ""
+          )}
         >
           <Outlet />
-          {/* Outlet: A placeholder from react-router that renders the child route elements. */}
         </main>
       </div>
     </div>
   );
 };
 
+const cn = (...classes) => classes.filter(Boolean).join(" ");
 export default AppLayout;

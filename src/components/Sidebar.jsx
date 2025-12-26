@@ -90,7 +90,7 @@ const SidebarContent = ({ role, pathname, onItemClick }) => {
                       <Button
                         variant="ghost"
                         className={cn(
-                          "group w-full justify-start h-10 px-3 rounded-xl transition-all",
+                          "group w-full justify-start h-10 cursor-pointer px-3 rounded-xl transition-all",
                           isActive
                             ? "bg-blue-50 text-blue-600 shadow-sm"
                             : "text-slate-500 hover:bg-slate-50"
