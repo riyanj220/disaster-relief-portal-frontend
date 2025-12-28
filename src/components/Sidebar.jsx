@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import {
   LayoutDashboard,
   ClipboardList,
@@ -21,6 +21,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import useAuthStore from "@/store/useAuthStore";
 
 const MENUS = {
   admin: [
@@ -67,12 +68,19 @@ const MENUS = {
 };
 const SidebarContent = ({ role, pathname, onItemClick }) => {
   const sections = MENUS[role] || [];
+  const navigate = useNavigate();
+  const logout = useAuthStore((state) => state.logout);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login");
+    } catch (error) {
+      console.log("Logout failed:", error);
+    }
+  };
 
   return (
-    /* 1. h-full: Ensures it takes the full height of the drawer/sidebar.
-      2. flex flex-col: Allows us to use mt-auto or justify-between.
-      3. min-h-0: Prevents the container from expanding beyond its parent's height.
-    */
     <div className="flex flex-col h-full bg-white min-h-0 overflow-hidden">
       <ScrollArea className="flex-1 px-4 py-6">
         <div className="space-y-8">
@@ -126,8 +134,9 @@ const SidebarContent = ({ role, pathname, onItemClick }) => {
       */}
       <div className="p-4 border-t border-slate-100 bg-slate-50/50 mt-auto shrink-0 mb-safe">
         <Button
+          onClick={handleLogout}
           variant="ghost"
-          className="w-full justify-start text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors group"
+          className="w-full justify-start cursor-pointer  text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors group"
         >
           <LogOut className="h-4 w-4 mr-3 group-hover:-translate-x-1 transition-transform" />
           <span className="text-xs font-bold uppercase tracking-wider">

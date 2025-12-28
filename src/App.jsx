@@ -1,6 +1,13 @@
+import { useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router";
+import useAuthStore from "./store/useAuthStore";
+import ProtectedRoute from "./components/ProtectedRoute";
+
+// Layouts
 import PublicLayout from "./components/layouts/PublicLayout";
 import AppLayout from "./components/layouts/AppLayout";
+
+// Pages
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -16,31 +23,70 @@ import CitizenRequestHistory from "./pages/citizen/CitizenRequestHistory";
 import CitizenDashboard from "./pages/citizen/CitizenDashboard";
 
 function App() {
+  const initialize = useAuthStore((state) => state.initialize);
+  const loading = useAuthStore((state) => state.loading);
+
+  useEffect(() => {
+    // Start listening to Firebase Auth state changes on mount
+    initialize();
+  }, [initialize]);
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <p className="text-xl font-semibold">Loading Portal...</p>
+      </div>
+    );
+  }
+
   return (
     <BrowserRouter>
       <Routes>
-        {/* All routes inside this wrap will share Navbar and Footer */}
+        {/* Public Routes */}
         <Route element={<PublicLayout />}>
           <Route index element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
         </Route>
 
-        <Route path="/admin" element={<AppLayout role="admin" />}>
+        {/* Admin Routes - Protected */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
+              <AppLayout role="admin" />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<AdminDashboard />} />
           <Route path="requests" element={<AdminRequests />} />
           <Route path="inventory" element={<AdminInventory />} />
           <Route path="volunteers" element={<AdminVolunteers />} />
         </Route>
 
-        <Route path="/volunteer" element={<AppLayout role="volunteer" />}>
+        {/* Volunteer Routes - Protected */}
+        <Route
+          path="/volunteer"
+          element={
+            <ProtectedRoute allowedRoles={["VOLUNTEER"]}>
+              <AppLayout role="volunteer" />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<VolunteerDashboard />} />
           <Route path="tasks" element={<VolunteerTasks />} />
           <Route path="status" element={<VolunteerStatus />} />
         </Route>
 
-        {/* Citizen Routes - With Sidebar */}
-        <Route path="/citizen" element={<AppLayout role="citizen" />}>
+        {/* Citizen Routes - Protected */}
+        <Route
+          path="/citizen"
+          element={
+            <ProtectedRoute allowedRoles={["CITIZEN"]}>
+              <AppLayout role="citizen" />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<CitizenDashboard />} />
           <Route path="request" element={<CitizenNewRequest />} />
           <Route path="request-history" element={<CitizenRequestHistory />} />

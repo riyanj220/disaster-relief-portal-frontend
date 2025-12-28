@@ -94,7 +94,17 @@ const AdminInventory = () => {
                   className="rounded-xl bg-slate-50 border-none h-11"
                 />
               </div>
+
               <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
+                    Category
+                  </label>
+                  <Input
+                    placeholder="e.g. Food, medical"
+                    className="rounded-xl bg-slate-50 border-none h-11"
+                  />
+                </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
                     Quantity
@@ -105,12 +115,24 @@ const AdminInventory = () => {
                     className="rounded-xl bg-slate-50 border-none h-11"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
                     Unit
                   </label>
                   <Input
                     placeholder="e.g. packs"
+                    className="rounded-xl bg-slate-50 border-none h-11"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
+                    Location
+                  </label>
+                  <Input
+                    placeholder="e.g. Warehouse A"
                     className="rounded-xl bg-slate-50 border-none h-11"
                   />
                 </div>
