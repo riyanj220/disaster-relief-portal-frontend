@@ -186,10 +186,12 @@ const Signup = () => {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-3 text-white font-bold rounded-lg shadow-lg transition transform hover:-translate-y-0.5 mt-4 ${
+            className={`w-full py-3 text-white font-bold rounded-lg shadow-lg transition transform mt-4 ${
               loading
-                ? "opacity-50"
-                : role === "VOLUNTEER"
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:-translate-y-0.5"
+            } ${
+              role === "VOLUNTEER"
                 ? "bg-blue-600 hover:bg-blue-700"
                 : "bg-emerald-500 hover:bg-emerald-600"
             }`}
