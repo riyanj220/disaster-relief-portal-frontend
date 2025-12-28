@@ -1,20 +1,57 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import api from "@/lib/api";
+import useAuthStore from "@/store/useAuthStore";
 import { ShieldCheck, Power, MapPin, Award, Info, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 const VolunteerStatus = () => {
-  const [isOnDuty, setIsOnDuty] = useState(true);
+  // 1. Get profile and initialize function from Zustand
+  const { profile, initialize } = useAuthStore();
+
+  // 2. Local state for immediate UI feedback
+  const [isOnDuty, setIsOnDuty] = useState(profile?.status === "ON_DUTY");
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Sync local state if profile loads after component mount
+  useEffect(() => {
+    if (profile) {
+      setIsOnDuty(profile.status === "ON_DUTY");
+    }
+  }, [profile]);
+
+  // 3. Update Status API Call
+  const handleToggleStatus = async (newStatus) => {
+    if (isUpdating) return;
+
+    setIsUpdating(true);
+    try {
+      // API call to Spring Boot
+      await api.patch("/volunteer/status", { status: newStatus });
+
+      // Update local UI state
+      setIsOnDuty(newStatus === "ON_DUTY");
+
+      // Refresh the global store so the Navbar and other components stay in sync
+      initialize();
+    } catch (error) {
+      console.error("Failed to update status", error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const skills = [
+    {
+      name: profile?.primarySkill || "General Assistance",
+      level: "Primary Skill",
+    },
     { name: "First Aid", level: "Expert" },
-    { name: "HGV Driving", level: "Advanced" },
-    { name: "Search & Rescue", level: "Certified" },
   ];
 
   return (
-    <div className="max-w-4xl space-y-8 pb-10 flex flex-col justify-center">
+    <div className="max-w-4xl space-y-8 pb-10 flex flex-col justify-center mx-auto">
       {/* Header with status indicator */}
       <div className="flex justify-between items-center">
         <div>
@@ -43,11 +80,16 @@ const VolunteerStatus = () => {
               <Info size={14} className="text-slate-300" />
             </div>
 
-            <div className="grid grid-cols-2 gap-4 p-1.5 bg-slate-50 rounded-2xl border border-slate-100">
+            <div
+              className={cn(
+                "grid grid-cols-2 gap-4 p-1.5 bg-slate-50 rounded-2xl border border-slate-100 transition-opacity",
+                isUpdating && "opacity-50 pointer-events-none"
+              )}
+            >
               <button
-                onClick={() => setIsOnDuty(true)}
+                onClick={() => handleToggleStatus("ON_DUTY")}
                 className={cn(
-                  "flex items-center justify-center gap-2 py-4 rounded-xl font-bold transition-all duration-300",
+                  "flex items-center justify-center gap-2 py-4 rounded-xl font-bold transition-all duration-300 cursor-pointer",
                   isOnDuty
                     ? "bg-white text-blue-600 shadow-md ring-1 ring-slate-200/50 scale-[1.02]"
                     : "text-slate-400 hover:text-slate-600"
@@ -57,9 +99,9 @@ const VolunteerStatus = () => {
                 On Duty
               </button>
               <button
-                onClick={() => setIsOnDuty(false)}
+                onClick={() => handleToggleStatus("OFF_DUTY")}
                 className={cn(
-                  "flex items-center justify-center gap-2 py-4 rounded-xl font-bold transition-all duration-300",
+                  "flex items-center justify-center gap-2 py-4 rounded-xl font-bold transition-all duration-300 cursor-pointer",
                   !isOnDuty
                     ? "bg-white text-slate-800 shadow-md ring-1 ring-slate-200/50 scale-[1.02]"
                     : "text-slate-400 hover:text-slate-600"
@@ -132,7 +174,7 @@ const VolunteerStatus = () => {
                     isOnDuty ? "text-emerald-900" : "text-slate-500"
                   )}
                 >
-                  Ready for Dispatch
+                  {isOnDuty ? "Ready for Dispatch" : "Currently Offline"}
                 </h4>
                 <p
                   className={cn(
