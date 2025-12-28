@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "@/lib/api"; // Your Axios instance with interceptors
 import {
   Heart,
   Stethoscope,
@@ -10,13 +12,22 @@ import {
   CheckCircle2,
   ArrowRight,
 } from "lucide-react";
-import { cn } from "@/lib/utils"; // shadcn helper for merging classes
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 const CitizenNewRequest = () => {
+  const navigate = useNavigate();
+
+  // --- Form State ---
+  const [loading, setLoading] = useState(false);
   const [assistanceType, setAssistanceType] = useState("");
+  const [formData, setFormData] = useState({
+    urgency: "Low (General Need)",
+    familySize: 1,
+    address: "",
+  });
 
   const types = [
     {
@@ -45,22 +56,52 @@ const CitizenNewRequest = () => {
     },
   ];
 
+  // --- Submit Handler ---
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!assistanceType) {
+      alert("Please select a type of assistance.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = {
+        assistanceType: assistanceType,
+        urgency: formData.urgency,
+        familySize: parseInt(formData.familySize),
+        address: formData.address,
+      };
+
+      // POST call to your Spring Boot Backend
+      await api.post("/requests", payload);
+
+      alert("Request submitted successfully!");
+      navigate("/citizen/request-history"); // Redirect to history page
+    } catch (error) {
+      console.error("Submission failed:", error);
+      alert("Failed to submit request. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto space-y-10 pb-12">
-      {/* Header with clear instruction */}
       <div className="text-center md:text-left">
         <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
           Submit Relief Request
         </h2>
         <p className="text-slate-500 font-medium mt-2">
-          Providing precise details helps our{" "}
-          <span className="text-blue-600 font-bold">Priority Engine</span>{" "}
-          dispatch aid faster.
+          Providing precise details helps aid dispatch faster.
         </p>
       </div>
 
-      <form className="bg-white p-6 md:p-10 rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/50 space-y-8">
-        {/* Visual Type Selector */}
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-6 md:p-10 rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/50 space-y-8"
+      >
+        {/* Assistance Type */}
         <div className="space-y-4">
           <label className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
             <CheckCircle2 size={14} /> Type of Assistance
@@ -102,7 +143,13 @@ const CitizenNewRequest = () => {
               Urgency Level
             </label>
             <div className="relative">
-              <select className="w-full h-12 px-4 bg-slate-50 border-none rounded-xl font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 transition-all appearance-none outline-none">
+              <select
+                value={formData.urgency}
+                onChange={(e) =>
+                  setFormData({ ...formData, urgency: e.target.value })
+                }
+                className="w-full h-12 px-4 bg-slate-50 border-none rounded-xl font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 appearance-none outline-none"
+              >
                 <option>Low (General Need)</option>
                 <option>Medium (Urgent)</option>
                 <option>High (Critical)</option>
@@ -121,6 +168,11 @@ const CitizenNewRequest = () => {
             <div className="relative">
               <Input
                 type="number"
+                min="1"
+                value={formData.familySize}
+                onChange={(e) =>
+                  setFormData({ ...formData, familySize: e.target.value })
+                }
                 placeholder="1"
                 className="h-12 bg-slate-50 border-none rounded-xl font-bold text-slate-700 pl-10"
               />
@@ -137,6 +189,10 @@ const CitizenNewRequest = () => {
           <div className="relative">
             <Textarea
               rows="4"
+              value={formData.address}
+              onChange={(e) =>
+                setFormData({ ...formData, address: e.target.value })
+              }
               placeholder="E.g., Sector 7, Street 12, near the Red Mosque..."
               className="bg-slate-50 border-none rounded-2xl font-semibold text-slate-700 p-4 pl-12 resize-none focus-visible:ring-2 focus-visible:ring-blue-500"
             />
@@ -146,13 +202,13 @@ const CitizenNewRequest = () => {
 
         {/* Submit Action */}
         <div className="pt-4">
-          <Button className="w-full h-14 bg-slate-900 hover:bg-blue-600 text-white rounded-2xl font-bold uppercase tracking-widest shadow-xl transition-all duration-300 group">
-            Confirm and Submit
+          <Button
+            disabled={loading}
+            className="w-full h-14 bg-slate-900 hover:bg-blue-600 text-white rounded-2xl font-bold uppercase tracking-widest shadow-xl cursor-pointer transition-all duration-300 group"
+          >
+            {loading ? "Submitting..." : "Confirm and Submit"}
             <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </Button>
-          <p className="text-center text-[10px] text-slate-400 mt-4 font-medium uppercase tracking-tighter">
-            Your location will be shared with the emergency response team.
-          </p>
         </div>
       </form>
     </div>

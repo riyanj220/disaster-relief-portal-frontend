@@ -42,8 +42,8 @@ const CitizenDashboard = () => {
           size="lg"
           className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl shadow-xl shadow-emerald-100 px-8 h-14 transition-all hover:translate-y-0.5 active:scale-95"
         >
-          <Link to="/citizen/new-request">
-            <HeartHandshake className="mr-2 h-5 w-5" />
+          <Link to="/citizen/request">
+            <HeartHandshake className="mr-2 h-5 w-5 cursor-pointer" />
             Request New Aid
           </Link>
         </Button>

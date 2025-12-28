@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import api from "@/lib/api";
 import {
   Clock,
   Rocket,
@@ -13,37 +15,55 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 const AdminDashboard = () => {
-  const stats = [
+  const navigate = useNavigate();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await api.get("/admin/stats");
+        setData(response.data);
+      } catch (err) {
+        console.error("Dashboard fetch error", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  const statsConfig = [
     {
       label: "Pending Requests",
-      value: "42",
+      value: data?.pendingRequests || 0,
       icon: Clock,
       color: "text-amber-600",
       bg: "bg-amber-50",
       border: "border-amber-100",
-      change: "+12% from yesterday",
+      change: "Needs Verification",
     },
     {
       label: "Active Missions",
-      value: "12",
+      value: data?.activeMissions || 0,
       icon: Rocket,
       color: "text-blue-600",
       bg: "bg-blue-50",
       border: "border-blue-100",
-      change: "2 nearing completion",
+      change: "In Progress",
     },
     {
-      label: "Available Volunteers",
-      value: "158",
+      label: "Total Volunteers",
+      value: data?.totalVolunteers || 0,
       icon: Users,
       color: "text-emerald-600",
       bg: "bg-emerald-50",
       border: "border-emerald-100",
-      change: "8 new today",
+      change: "Ready for Dispatch",
     },
     {
       label: "Critical Stock",
-      value: "3 Items",
+      value: `${data?.criticalItems || 0} Items`,
       icon: AlertTriangle,
       color: "text-red-600",
       bg: "bg-red-50",
@@ -52,31 +72,29 @@ const AdminDashboard = () => {
     },
   ];
 
+  if (loading)
+    return (
+      <div className="p-10 text-center font-bold animate-pulse">
+        Loading Analytics...
+      </div>
+    );
+
   return (
     <div className="space-y-8 w-full max-w-full overflow-x-hidden pb-10">
-      {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
             System Overview
           </h2>
           <p className="text-slate-500 text-sm font-medium mt-1">
-            Real-time operational intelligence for ReliefConnect.
+            Real-time operational intelligence.
           </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="hidden sm:flex">
-            Generate Report
-          </Button>
-          <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-            New Mission
-          </Button>
         </div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {stats.map((stat, i) => (
+        {statsConfig.map((stat, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 15 }}
@@ -112,7 +130,7 @@ const AdminDashboard = () => {
         ))}
       </div>
 
-      {/* Priority Action Table Section */}
+      {/* Priority Action Table */}
       <Card className="border-slate-200 shadow-md overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b bg-slate-50/50">
           <div>
@@ -120,13 +138,14 @@ const AdminDashboard = () => {
               High Priority Tasks
             </CardTitle>
             <p className="text-xs text-slate-500 mt-1 font-medium">
-              Immediate attention required for these requests.
+              Immediate attention required.
             </p>
           </div>
           <Button
             variant="ghost"
             size="sm"
-            className="text-blue-600 font-bold hover:text-blue-700"
+            onClick={() => navigate("/admin/requests")}
+            className="text-blue-600 font-bold cursor-pointer"
           >
             View All <ChevronRight size={16} />
           </Button>
@@ -139,49 +158,39 @@ const AdminDashboard = () => {
                 <th className="px-6 py-4 border-b">Request ID</th>
                 <th className="px-6 py-4 border-b">Location</th>
                 <th className="px-6 py-4 border-b">Urgency</th>
-                <th className="px-6 py-4 border-b">Status</th>
                 <th className="px-6 py-4 border-b text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
-              {[1, 2, 3].map((id) => (
+              {data?.topRequests.map((req) => (
                 <tr
-                  key={id}
+                  key={req.requestId}
                   className="hover:bg-slate-50/30 transition-colors group"
                 >
                   <td className="px-6 py-4 font-bold text-slate-700">
                     <span className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-                      #REQ-00{id}
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />#
+                      {req.requestId.substring(0, 6)}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-slate-500 font-semibold">
-                    District {id * 4}, Sector 7
+                    {req.address}
                   </td>
                   <td className="px-6 py-4">
                     <Badge
                       variant="destructive"
-                      className="bg-red-50 text-red-600 border-red-100 text-[10px] font-bold uppercase tracking-tighter px-2"
+                      className="bg-red-50 text-red-600 border-red-100 text-[10px] font-bold uppercase px-2"
                     >
-                      Critical
+                      {req.urgency}
                     </Badge>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-slate-500 italic font-medium">
-                      <Clock size={14} className="text-slate-400" />
-                      Pending Verification
-                    </div>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <Button
+                      onClick={() => navigate("/admin/requests")}
                       size="sm"
-                      className="h-8 bg-slate-900 hover:bg-slate-800 font-bold text-[11px] rounded-lg"
+                      className="h-8 bg-slate-900 font-bold text-[11px] rounded-lg cursor-pointer"
                     >
-                      Review{" "}
-                      <ArrowUpRight
-                        size={14}
-                        className="ml-1 opacity-50 group-hover:opacity-100 transition-opacity"
-                      />
+                      Review <ArrowUpRight size={14} className="ml-1" />
                     </Button>
                   </td>
                 </tr>
