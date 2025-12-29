@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router";
-import { User, ChevronDown, Menu, LogOut } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { User, Menu, LogOut, LogIn, UserPlus } from "lucide-react";
 import useAuthStore from "@/store/useAuthStore";
+import { Button } from "../ui/button";
 
 const Navbar = ({ onMenuClick }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -11,14 +12,14 @@ const Navbar = ({ onMenuClick }) => {
   // 1. Extract dynamic state and actions from Zustand
   const { profile, user, logout } = useAuthStore();
 
-  // 2. Derive user details or default to guest
+  // 2. Derive user details
   const userRole = profile?.role?.toLowerCase() || "guest";
   const fullName = profile
     ? `${profile.firstName} ${profile.lastName}`
     : "Guest User";
 
   const handleLogout = async () => {
-    await logout(); //
+    await logout();
     setIsProfileOpen(false);
     navigate("/login");
   };
@@ -72,8 +73,9 @@ const Navbar = ({ onMenuClick }) => {
           </div>
         </div>
 
-        {/* RIGHT SIDE: Desktop Nav + User Profile */}
+        {/* RIGHT SIDE: Desktop Nav + User Profile/Auth Buttons */}
         <div className="flex items-center gap-4">
+          {/* Navigation Links (Only shown on Desktop) */}
           <div className="hidden md:flex items-center gap-8 text-slate-500 font-semibold text-[13px] uppercase tracking-wider mr-4">
             {userRole === "guest" ? (
               <Link to="/" className="hover:text-blue-600 transition-colors">
@@ -82,7 +84,7 @@ const Navbar = ({ onMenuClick }) => {
             ) : (
               <>
                 <Link
-                  to={`/${userRole}`} // Dynamically route to /admin, /volunteer, or /citizen
+                  to={`/${userRole}`}
                   className={cn(
                     "hover:text-blue-600",
                     location.pathname.includes(userRole) && "text-blue-600"
@@ -99,8 +101,9 @@ const Navbar = ({ onMenuClick }) => {
             )}
           </div>
 
-          {/* User Section */}
-          {user && (
+          {/* User Authentication Section */}
+          {user ? (
+            /* Logged In: Show Profile Dropdown */
             <div className="relative">
               <div
                 className="flex items-center gap-3 pl-2 cursor-pointer group"
@@ -110,7 +113,7 @@ const Navbar = ({ onMenuClick }) => {
                   <p className="text-sm font-bold text-slate-800 leading-tight">
                     {fullName}
                   </p>
-                  <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-tighter text-left sm:text-right">
+                  <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-tighter">
                     {userRole}
                   </p>
                 </div>
@@ -120,27 +123,39 @@ const Navbar = ({ onMenuClick }) => {
                     className="text-slate-400 group-hover:text-blue-600"
                   />
                 </div>
-                {/* <ChevronDown
-                  size={14}
-                  className={cn(
-                    "hidden sm:block text-slate-400 transition-transform",
-                    isProfileOpen && "rotate-180"
-                  )}
-                /> */}
               </div>
 
-              {/* Simple Dropdown for Logout */}
-              {/* {isProfileOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-xl shadow-xl py-2 z-50">
+              {/* Profile Dropdown Menu */}
+              {isProfileOpen && (
+                <div className="absolute right-0 mt-3 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2">
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    className="w-full px-4 py-3 text-left text-sm font-bold text-red-500 hover:bg-red-50 flex items-center gap-2 transition-colors cursor-pointer"
                   >
-                    <LogOut size={16} />
-                    Logout
+                    <LogOut size={16} /> Sign Out
                   </button>
                 </div>
-              )} */}
+              )}
+            </div>
+          ) : (
+            /* Logged Out: Show Auth Buttons */
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Button
+                variant="ghost"
+                asChild
+                className="hidden sm:flex text-slate-600 font-bold text-xs uppercase tracking-widest hover:text-blue-600"
+              >
+                <Link to="/login">Login</Link>
+              </Button>
+              <Button
+                asChild
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl px-5 h-10 text-xs uppercase tracking-widest shadow-lg shadow-blue-100 transition-all active:scale-95"
+              >
+                <Link to="/signup">
+                  <UserPlus size={16} className="mr-2 hidden xs:block" />
+                  Join Now
+                </Link>
+              </Button>
             </div>
           )}
         </div>
